@@ -53,11 +53,12 @@ struct Student {
 fn make_cors() -> Cors {
     let allowed_origins = AllowedOrigins::some_exact(&[
         "http://127.0.0.1:5500/class_06/index.html",
-        "http://rust-rest-api.surge.sh/", // allow request from these
-                                          // allow from local machine
+        "http://rust-rest-api.surge.sh/",
+        // allow request from these
+        // allow from local machine
     ]);
     CorsOptions {
-        allowed_origins,
+        allowed_origins: AllowedOrigins::All,
         allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Delete]
             .into_iter()
             .map(From::from)
@@ -126,9 +127,7 @@ fn main() {
 
 //------------------------------Insert DAta into database-------------------------
 fn insert(student: Student) -> JsonValue {
-    let pool =
-        Pool::new("mysql://user:password@localhost:3306/database_name")
-            .unwrap();
+    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
     let students = vec![student];
@@ -154,9 +153,7 @@ fn insert(student: Student) -> JsonValue {
 
 //---------------------------------get data from database----------------------
 fn fetch() -> JsonValue {
-    let pool =
-        Pool::new("mysql://user:password@localhost:3306/database_name")
-            .unwrap();
+    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
     let selected_payments = conn
@@ -176,9 +173,7 @@ fn fetch() -> JsonValue {
 
 //--------------------------------update data in database----------------------
 fn update(student: Student) {
-    let pool =
-        Pool::new("mysql://user:password@localhost:3306/database_name")
-            .unwrap();
+    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
     let mut conn = pool.get_conn().unwrap();
 
     let students = vec![student];
@@ -206,9 +201,7 @@ fn update(student: Student) {
 
 //--------------------------------delete data from database----------------------
 fn delete(id1: i32) {
-    let pool =
-        Pool::new("mysql://user:password@localhost:3306/database_name")
-            .unwrap();
+    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
 

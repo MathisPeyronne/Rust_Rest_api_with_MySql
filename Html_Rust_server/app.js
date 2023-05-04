@@ -14,7 +14,7 @@ $(document).ready(function () {
 
   //----------------------get data-----------------
   async function getData() {
-    let response = await fetch("https://rocket-restapi-crud.herokuapp.com");
+    let response = await fetch("http://localhost:8000");
     let data = await response.json();
     return data;
   }
@@ -42,7 +42,7 @@ $(document).ready(function () {
       };
 
       $.post(
-        "https://rocket-restapi-crud.herokuapp.com/add",
+        "http://localhost:8000/add",
         JSON.stringify(arr)
       )
         .then(function (d) {
@@ -111,7 +111,7 @@ $(document).ready(function () {
       };
 
       $.ajax({
-        url: "https://rocket-restapi-crud.herokuapp.com/update",
+        url: "http://localhost:8000/update",
         type: "PUT",
         data: JSON.stringify(array),
         success: function () {
@@ -146,7 +146,7 @@ $(document).ready(function () {
   $(".ul").on("click", "strong", function (e) {
     e.stopPropagation();
     var clickedId = $(this).parent().data("id");
-    let url = "https://rocket-restapi-crud.herokuapp.com/delete/" + clickedId;
+    let url = "http://localhost:8000/delete/" + clickedId;
 
     let removeData = $(this).parent();
 
@@ -178,12 +178,12 @@ $(document).ready(function () {
 function addSingleData(d, id) {
   var addingData = $(
     '<li class="task"><span class="name"> ' +
-      d.name +
-      "</span><span class='email'>" +
-      d.email +
-      "</span><span class='age'>" +
-      d.age +
-      "</span><button class='edit'>Edit</button><strong>X</strong></li>"
+    d.name +
+    "</span><span class='email'>" +
+    d.email +
+    "</span><span class='age'>" +
+    d.age +
+    "</span><button class='edit'>Edit</button><strong>X</strong></li>"
   );
   addingData.data("id", id);
   $("ul").append(addingData);
