@@ -58,7 +58,7 @@ fn make_cors() -> Cors {
         // allow from local machine
     ]);
     CorsOptions {
-        allowed_origins: AllowedOrigins::All,
+        allowed_origins: AllowedOrigins::All, //changed it
         allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Delete]
             .into_iter()
             .map(From::from)
@@ -127,7 +127,7 @@ fn main() {
 
 //------------------------------Insert DAta into database-------------------------
 fn insert(student: Student) -> JsonValue {
-    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
     let students = vec![student];
@@ -153,7 +153,7 @@ fn insert(student: Student) -> JsonValue {
 
 //---------------------------------get data from database----------------------
 fn fetch() -> JsonValue {
-    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
     let selected_payments = conn
@@ -173,7 +173,7 @@ fn fetch() -> JsonValue {
 
 //--------------------------------update data in database----------------------
 fn update(student: Student) {
-    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
     let mut conn = pool.get_conn().unwrap();
 
     let students = vec![student];
@@ -201,7 +201,7 @@ fn update(student: Student) {
 
 //--------------------------------delete data from database----------------------
 fn delete(id1: i32) {
-    let pool = Pool::new("mysql://user:password@localhost:3306/database_name").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
 
@@ -216,4 +216,4 @@ fn delete(id1: i32) {
     println!("deleted successfully {:?}", id1);
 }
 
-//mysql://root:password@localhost:3306/Rust_testing
+//mysql://root:root@localhost:3306/Rust_testing
