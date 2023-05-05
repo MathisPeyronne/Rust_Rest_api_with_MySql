@@ -103,17 +103,22 @@ $(document).ready(function () {
     } else {
       updateRecord.style.display = "none";
 
-      var array = {
+      var student = {
         sid,
         name: inputs[0].value,
         email: inputs[1].value,
         age: inputs[2].value,
       };
 
+      var Movies_liked_or_recommended = {
+        student: student,
+        movies: ["Film1", "Film2", "Film3"],
+      };
+
       $.ajax({
-        url: "http://localhost:8000/update",
+        url: "http://localhost:8000/get_recommendations",
         type: "PUT",
-        data: JSON.stringify(array),
+        data: JSON.stringify(Movies_liked_or_recommended),
         success: function () {
           $("li").each(function (li) {
             if ($(this).data("id") == sid) {

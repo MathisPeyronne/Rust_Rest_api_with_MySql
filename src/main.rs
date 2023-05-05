@@ -50,6 +50,12 @@ struct Student {
     age: Option<String>,
 }
 
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
+struct Movies_liked_or_recommended {
+    student: Student,
+    movies: Vec<String>,
+}
+
 fn make_cors() -> Cors {
     let allowed_origins = AllowedOrigins::some_exact(&[
         "http://127.0.0.1:5500/class_06/index.html",
@@ -112,11 +118,25 @@ fn helloPost(user_input: Json<Student>, map: State<'_, MessageMap>) -> JsonValue
     result
 }
 
+//------------------------------get recommendations data-------------------------
+#[put("/get_recommendations", data = "<user_input>")]
+fn get_recommendation(
+    user_input: Json<Movies_liked_or_recommended>,
+    map: State<'_, MessageMap>,
+) -> JsonValue {
+    let res: Movies_liked_or_recommended = user_input.into_inner();
+    get_recommendations(res);
+    json!({"status":"okay"})
+}
+
 // ---------------------------main function for rocket launch------------------------
 
 fn rocket() -> rocket::Rocket {
     rocket::ignite()
-        .mount("/", routes![getRequest, helloPost, edit, deleted])
+        .mount(
+            "/",
+            routes![getRequest, helloPost, edit, deleted, get_recommendation],
+        )
         .attach(make_cors())
         .manage(Mutex::new(HashMap::<ID, Option<String>>::new()))
 }
@@ -217,3 +237,64 @@ fn delete(id1: i32) {
 }
 
 //mysql://root:root@localhost:3306/Rust_testing
+
+//**************** What i added *********************/
+//--------------------------------custome SQL query to get recommendations ----------------------
+// input: movies selected
+// process:
+//      - take the list of films and build a huge query that gets the right movie recommendations.
+// output: movies recommended
+fn get_recommendations(movies_liked: Movies_liked_or_recommended) {
+    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
+    let mut conn = pool.get_conn().unwrap();
+
+    let students = vec![movies_liked.student];
+    let liked_films: Vec<String> = movies_liked.movies;
+    println!("{:?}", liked_films);
+
+    conn.exec_batch(
+        r"UPDATE student 
+        set
+        name=:name,
+        email=:email,
+        age=:age 
+        where sid=:sid",
+        students.iter().map(|p| {
+            params! {
+                "sid" => p.sid,
+                "name" => &p.name,
+                "email" => &p.email,
+                "age"=>&p.age
+            }
+        }),
+    )
+    .unwrap();
+
+    let recommended_movies = conn
+        .query_map(
+            "SELECT sid, name, email, age from student",
+            |(sid, name, email, age)| Student {
+                sid,
+                name,
+                email,
+                age,
+            },
+        )
+        .unwrap();
+    println!("{:?}", recommended_movies);
+    // json!(selected_payments);
+
+    let recommended_movies2 = conn
+        .query_map(
+            build_sql_recommendation_query(liked_films),
+            |row: mysql::Row| -> String { row.get(0).unwrap() },
+        )
+        .unwrap();
+    println!("{:?}", recommended_movies2);
+
+    println!("updated successfully");
+}
+
+fn build_sql_recommendation_query(movies_liked: Vec<String>) -> String {
+    "SELECT name FROM student".to_string()
+}
