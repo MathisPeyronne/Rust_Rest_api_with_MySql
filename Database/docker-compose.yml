@@ -1,0 +1,29 @@
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      #- ./my.cnf:/etc/mysql/conf.d/my.cnf  
+      - ./BD_test_api.sql:/docker-entrypoint-initdb.d/BD_test_api.sql
+
+  # je pourrais l'enlever celui la si je veux
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "8080:80"
+
+volumes:
+  db_data:
+    driver: local
