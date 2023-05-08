@@ -5,7 +5,7 @@ $(document).ready(function () {
 
   let updateRecord = document.querySelector(".edit-form");
   let inputs = document.querySelector(".edit-f");
-  updateRecord.style.display = "none";
+  //updateRecord.style.display = "none";
   let sid = 0;
 
   $("#deleted").css("display", "none");
@@ -67,6 +67,64 @@ $(document).ready(function () {
           }, 3000);
         });
     }
+  });
+
+  //---------------------------Get recommendations--------------------- submit_recommendation"
+
+  $("#submit_recommendation").click(function (e) {
+    console.log("here");
+    e.preventDefault();
+    var student = {
+      sid,
+      name: "jfkldsjfl",//inputs[0].value,
+      email: "kflsdjflsd",//inputs[1].value,
+      age: "3",//inputs[2].value,
+    };
+
+    //********************* important ****************************/
+    //get access to the values of the checkboxes that where selected by the user
+    var selectedCheckboxes = [];
+    $.each($("input[name='checkbox[]']:checked"), function () {
+      selectedCheckboxes.push($(this).val());
+    });
+    alert("Selected checkboxes are: " + selectedCheckboxes.join(", "));
+
+    var Movies_liked_or_recommended = {
+      student: student,
+      movies: selectedCheckboxes, //["Film1", "Film4", "Film3"],
+    };
+
+    //********************* ****************************/
+
+    $.ajax({
+      url: "http://localhost:8000/get_recommendations",
+      type: "PUT",
+      data: JSON.stringify(Movies_liked_or_recommended),
+      success: function () {
+        $("li").each(function (li) {
+          if ($(this).data("id") == sid) {
+            $(this).children(".name").text(array.name);
+            $(this).children(".email").text(array.email);
+            $(this).children(".age").text(array.age);
+
+            $("#updated").text("Updated Successfully.");
+            $("#updated").show();
+            $("#updated").css("background-color", "green");
+            setTimeout(function () {
+              $("#updated").hide();
+            }, 3000);
+          }
+        });
+      },
+      error: function (e) {
+        $("#updated").text("Updation failed.");
+        $("#updated").show();
+        $("#updated").css("background-color", "red");
+        setTimeout(function () {
+          $("#updated").hide();
+        }, 3000);
+      },
+    });
   });
 
   // ---------------------------Edit Code ------------------------------
