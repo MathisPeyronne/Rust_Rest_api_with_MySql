@@ -250,40 +250,9 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) {
 
     let students = vec![movies_liked.student];
     let liked_films: Vec<String> = movies_liked.movies;
-    println!("{:?}", liked_films);
+    println!("Likes movies: {:?}", liked_films);
 
-    conn.exec_batch(
-        r"UPDATE student 
-        set
-        name=:name,
-        email=:email,
-        age=:age 
-        where sid=:sid",
-        students.iter().map(|p| {
-            params! {
-                "sid" => p.sid,
-                "name" => &p.name,
-                "email" => &p.email,
-                "age"=>&p.age
-            }
-        }),
-    )
-    .unwrap();
-
-    let recommended_movies = conn
-        .query_map(
-            "SELECT sid, name, email, age from student",
-            |(sid, name, email, age)| Student {
-                sid,
-                name,
-                email,
-                age,
-            },
-        )
-        .unwrap();
-    println!("{:?}", recommended_movies);
-    // json!(selected_payments);
-
+    // my SQL request
     let recommended_movies2 = conn
         .query_map(
             build_sql_recommendation_query(liked_films),
@@ -291,6 +260,39 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) {
         )
         .unwrap();
     println!("{:?}", recommended_movies2);
+
+    //***************************************************************/
+    // conn.exec_batch(
+    //     r"UPDATE student
+    //     set
+    //     name=:name,
+    //     email=:email,
+    //     age=:age
+    //     where sid=:sid",
+    //     students.iter().map(|p| {
+    //         params! {
+    //             "sid" => p.sid,
+    //             "name" => &p.name,
+    //             "email" => &p.email,
+    //             "age"=>&p.age
+    //         }
+    //     }),
+    // )
+    // .unwrap();
+
+    // let recommended_movies = conn
+    //     .query_map(
+    //         "SELECT sid, name, email, age from student",
+    //         |(sid, name, email, age)| Student {
+    //             sid,
+    //             name,
+    //             email,
+    //             age,
+    //         },
+    //     )
+    //     .unwrap();
+    // println!("{:?}", recommended_movies);
+    // json!(selected_payments);
 
     println!("updated successfully");
 }

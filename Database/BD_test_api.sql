@@ -34,7 +34,7 @@ ALTER TABLE student ADD sid INT AUTO_INCREMENT PRIMARY KEY;
 -- Dumping data for table `CATEGORIES`
 --
 
-INSERT INTO `student` (`name`, `name`, `email`, `age`) VALUES
+INSERT INTO `student` (`name`, `email`, `age`) VALUES
 ('Leonardo DiCaprio', 'fds@gmail.com', 21),
 ('Ldofdsfs DiCaprio', 'fds@gfsdmail.com', 24)
 ;

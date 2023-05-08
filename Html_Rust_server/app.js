@@ -115,6 +115,15 @@ $(document).ready(function () {
             }, 3000);
           }
         });
+        var items = ["movie 1", "movie 2", "movie 3", "movie 4", "movie 5", "movie 6", "movie 7", "movie 8", "movie 9", "movie 10"];
+
+        // $('ol.u-text-3 li:nth-child(1)').text("data.item1");
+        // $('ol.u-text-3 li:nth-child(2)').text("data.item2");
+        // $('ol.u-text-3 li:nth-child(3)').text("data.item3");
+        // display the items
+        $('ol.u-text-3 li').each(function (index) {
+          $(this).text(items[index]);
+        });
       },
       error: function (e) {
         $("#updated").text("Updation failed.");
