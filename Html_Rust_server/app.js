@@ -94,13 +94,14 @@ $(document).ready(function () {
       movies: selectedCheckboxes, //["Film1", "Film4", "Film3"],
     };
 
-    //********************* ****************************/
+    //*************************************************/
 
     $.ajax({
       url: "http://localhost:8000/get_recommendations",
       type: "PUT",
       data: JSON.stringify(Movies_liked_or_recommended),
-      success: function () {
+      success: function (d) {
+        console.log(d);
         $("li").each(function (li) {
           if ($(this).data("id") == sid) {
             $(this).children(".name").text(array.name);
@@ -115,7 +116,7 @@ $(document).ready(function () {
             }, 3000);
           }
         });
-        var items = ["movie 1", "movie 2", "movie 3", "movie 4", "movie 5", "movie 6", "movie 7", "movie 8", "movie 9", "movie 10"];
+        var items = d;//["movie 1", "movie 2", "movie 3", "movie 4", "movie 5", "movie 6", "movie 7", "movie 8", "movie 9", "movie 10"];
 
         // $('ol.u-text-3 li:nth-child(1)').text("data.item1");
         // $('ol.u-text-3 li:nth-child(2)').text("data.item2");

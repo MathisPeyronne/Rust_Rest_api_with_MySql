@@ -125,8 +125,10 @@ fn get_recommendation(
     map: State<'_, MessageMap>,
 ) -> JsonValue {
     let res: Movies_liked_or_recommended = user_input.into_inner();
-    get_recommendations(res);
-    json!({"status":"okay"})
+    let mut data = get_recommendations(res);
+    //json!({"status":"okay"})
+
+    data
 }
 
 // ---------------------------main function for rocket launch------------------------
@@ -244,7 +246,7 @@ fn delete(id1: i32) {
 // process:
 //      - take the list of films and build a huge query that gets the right movie recommendations.
 // output: movies recommended
-fn get_recommendations(movies_liked: Movies_liked_or_recommended) {
+fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
     let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
     let mut conn = pool.get_conn().unwrap();
 
@@ -295,6 +297,8 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) {
     // json!(selected_payments);
 
     println!("updated successfully");
+
+    return json!(recommended_movies2);
 }
 
 fn build_sql_recommendation_query(movies_liked: Vec<String>) -> String {
