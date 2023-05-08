@@ -3,8 +3,8 @@
 #stage 1: generate a recipe file for dependencies
 FROM rust:latest as planner
 WORKDIR /app
-RUN rustup update
-RUN rustup override set nightly
+#RUN rustup update
+#RUN rustup override set nightly
 RUN cargo install cargo-chef
 COPY . .
 RUN cargo chef prepare --recipe-path recipe.json
@@ -12,18 +12,19 @@ RUN cargo chef prepare --recipe-path recipe.json
 #stage 2 - build dependencies
 FROM rust:latest as cacher
 WORKDIR /app
-RUN rustup update
-RUN rustup update nightly
+#RUN rustup update
+#RUN rustup update nightly
 #RUN rustup override set nightly 
-RUN rustup default nightly 
+#RUN rustup default nightly 
+RUN rustup toolchain install nightly
 RUN cargo install cargo-chef
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN cargo +nightly chef cook --release --recipe-path recipe.json
 
 #stage 3 
 FROM rust:latest as builder
-RUN rustup update
-RUN rustup override set nightly
+#RUN rustup update
+#RUN rustup override set nightly
 
 
 #Create a user
