@@ -23,3 +23,6 @@ mysql = "18.2.0"
 version = "0.4.2"
 default-features = false
 features = ["tera_templates", "json"]
+
+[toolchain]
+channel = "nightly"
