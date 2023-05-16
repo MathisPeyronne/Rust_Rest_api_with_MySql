@@ -302,5 +302,6 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
 }
 
 fn build_sql_recommendation_query(movies_liked: Vec<String>) -> String {
-    "SELECT name FROM student".to_string() //TODO: change it with manon's SQL query
+    //ici il y aura la requete SQL de manon
+    "SELECT titre FROM films".to_string() //TODO: change it with manon's SQL query
 }
