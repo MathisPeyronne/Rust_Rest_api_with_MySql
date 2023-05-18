@@ -11,7 +11,7 @@ services:
       - "3306:3306"
     volumes:
       #- ./my.cnf:/etc/mysql/conf.d/my.cnf  
-      - ./BD_test_api.sql:/docker-entrypoint-initdb.d/BD_test_api.sql
+      - ./film.sql:/docker-entrypoint-initdb.d/film.sql
 
   # je pourrais l'enlever celui la si je veux
   phpmyadmin:
