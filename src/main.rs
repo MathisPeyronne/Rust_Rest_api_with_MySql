@@ -329,11 +329,20 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
 }
 
 fn build_sql_query_views(movies_liked: &Vec<String>) -> String {
-    let Query = "/* Création de tables qui contiennent uniquement les films cochés */
+    let mut query = String::from(
+        "/* Création de tables qui contiennent uniquement les films cochés */
     CREATE OR REPLACE VIEW films_fav AS
     SELECT film_id,titre,annee,note,duree
     FROM films
-    WHERE titre='12 Angry Men' OR titre='Vertigo' OR titre='Spartacus' OR titre='West Side Story' OR titre='The Man in Grey' OR titre='Top Hat';
+    WHERE ",
+    );
+    for (i, movie) in movies_liked.iter().enumerate() {
+        query.push_str(&format!("titre='{}'", movie));
+        if i != movies_liked.len() - 1 {
+            query.push_str(" OR ");
+        }
+    }
+    query.push_str(";
     
     /*Compter quels sont les genres favoris*/
     CREATE OR REPLACE VIEW genres_fav AS
@@ -353,9 +362,37 @@ fn build_sql_query_views(movies_liked: &Vec<String>) -> String {
     CREATE OR REPLACE VIEW acteurs_fav AS
     SELECT film_acteurs.film_id,acteurs.cast_actor_id,nom
     FROM acteurs,films_fav,film_acteurs
+    WHERE film_acteurs.film_id=films_fav.film_id AND acteurs.cast_actor_id=film_acteurs.cast_actor_id;");
+
+    let Query = "/* Création de tables qui contiennent uniquement les films cochés */
+    CREATE OR REPLACE VIEW films_fav AS
+    SELECT film_id,titre,annee,note,duree
+    FROM films
+    WHERE titre='12 Angry Men' OR titre='Vertigo' OR titre='Spartacus' OR titre='West Side Story' OR titre='The Man in Grey' OR titre='Top Hat';
+
+    /*Compter quels sont les genres favoris*/
+    CREATE OR REPLACE VIEW genres_fav AS
+    SELECT film_genres.film_id, genre_id
+    FROM film_genres,films_fav
+    WHERE film_genres.film_id=films_fav.film_id;
+
+    /* De même pour les realisateurs */
+    CREATE OR REPLACE VIEW reals_fav AS
+    SELECT film_realisateurs.film_id, realisateur_id
+    FROM film_realisateurs,
+         films_fav
+    WHERE film_realisateurs.film_id = films_fav.film_id;
+
+
+    /* Les acteurs */
+    CREATE OR REPLACE VIEW acteurs_fav AS
+    SELECT film_acteurs.film_id,acteurs.cast_actor_id,nom
+    FROM acteurs,films_fav,film_acteurs
     WHERE film_acteurs.film_id=films_fav.film_id AND acteurs.cast_actor_id=film_acteurs.cast_actor_id;
     ".to_string();
-    Query
+
+    println!("{}", query);
+    query
 }
 
 fn build_sql_recommendation_query(movies_liked: &Vec<String>) -> String {
