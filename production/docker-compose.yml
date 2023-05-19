@@ -1,0 +1,28 @@
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      #- ./my.cnf:/etc/mysql/conf.d/my.cnf  
+      - ./film.sql:/docker-entrypoint-initdb.d/film.sql
+
+  backend:
+    build: .
+    # volumes:
+    #   - :/projects:/projects
+    environment:
+      - USER=Mathis
+    ports:
+      - "8000:8000"
+    restart: always
+
+volumes:
+  db_data:
+    driver: local
