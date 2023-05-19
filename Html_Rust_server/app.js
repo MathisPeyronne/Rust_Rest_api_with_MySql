@@ -104,9 +104,8 @@ $(document).ready(function () {
         console.log(d);
         $("li").each(function (li) {
           if ($(this).data("id") == sid) {
-            $(this).children(".name").text(array.name);
-            $(this).children(".email").text(array.email);
-            $(this).children(".age").text(array.age);
+            $(this).children(".titre").text(array.titre);
+            //$(this).children(".note").text(array.note);
 
             $("#updated").text("Updated Successfully.");
             $("#updated").show();
@@ -118,12 +117,13 @@ $(document).ready(function () {
         });
         var items = d;//["movie 1", "movie 2", "movie 3", "movie 4", "movie 5", "movie 6", "movie 7", "movie 8", "movie 9", "movie 10"];
 
+        var titles_only = d.map(movie => movie.title + " : " + movie.note);
         // $('ol.u-text-3 li:nth-child(1)').text("data.item1");
         // $('ol.u-text-3 li:nth-child(2)').text("data.item2");
         // $('ol.u-text-3 li:nth-child(3)').text("data.item3");
         // display the items
-        $('ol.u-text-3 li').each(function (index) {
-          $(this).text(items[index]);
+        $('ul.u-text-3 li').each(function (index) {
+          $(this).text(titles_only[index]);
         });
       },
       error: function (e) {
@@ -190,9 +190,8 @@ $(document).ready(function () {
         success: function () {
           $("li").each(function (li) {
             if ($(this).data("id") == sid) {
-              $(this).children(".name").text(array.name);
-              $(this).children(".email").text(array.email);
-              $(this).children(".age").text(array.age);
+              $(this).children(".titre").text(array.titre);
+              $(this).children(".note").text(array.note);
 
               $("#updated").text("Updated Successfully.");
               $("#updated").show();
