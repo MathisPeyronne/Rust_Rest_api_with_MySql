@@ -50,6 +50,12 @@ struct Student {
     age: Option<String>,
 }
 
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct film {
+    title: Option<String>,
+    note: Option<String>,
+}
+
 #[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 struct Movies_liked_or_recommended {
     student: Student,
@@ -149,7 +155,7 @@ fn main() {
 
 //------------------------------Insert DAta into database-------------------------
 fn insert(student: Student) -> JsonValue {
-    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/film").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
     let students = vec![student];
@@ -175,7 +181,7 @@ fn insert(student: Student) -> JsonValue {
 
 //---------------------------------get data from database----------------------
 fn fetch() -> JsonValue {
-    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/film").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
     let selected_payments = conn
@@ -195,7 +201,7 @@ fn fetch() -> JsonValue {
 
 //--------------------------------update data in database----------------------
 fn update(student: Student) {
-    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/film").unwrap();
     let mut conn = pool.get_conn().unwrap();
 
     let students = vec![student];
@@ -223,7 +229,7 @@ fn update(student: Student) {
 
 //--------------------------------delete data from database----------------------
 fn delete(id1: i32) {
-    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/film").unwrap();
 
     let mut conn = pool.get_conn().unwrap();
 
@@ -247,7 +253,7 @@ fn delete(id1: i32) {
 //      - take the list of films and build a huge query that gets the right movie recommendations.
 // output: movies recommended
 fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
-    let pool = Pool::new("mysql://root:root@localhost:3306/Projet_BD_Film").unwrap();
+    let pool = Pool::new("mysql://root:root@localhost:3306/film").unwrap();
     let mut conn = pool.get_conn().unwrap();
 
     let students = vec![movies_liked.student];
@@ -255,13 +261,68 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
     println!("Likes movies: {:?}", liked_films);
 
     // my SQL request
+    /*
     let recommended_movies2 = conn
         .query_map(
             build_sql_recommendation_query(liked_films),
             |row: mysql::Row| -> String { row.get(0).unwrap() },
         )
         .unwrap();
-    println!("{:?}", recommended_movies2);
+    */
+    //just update/create the views, don't care about the result. should probably use exec_drop
+
+    let _ = conn
+        .query_map(build_sql_query_views(liked_films), |(title, note)| film {
+            title,
+            note,
+        })
+        .unwrap();
+
+    let recommended_movies2 = conn
+        .query_map("SELECT DISTINCT films.titre, films.note/* , films.note, films.annee, films.duree le DISTINCT aussi */
+        FROM films
+        JOIN film_genres ON films.film_id = film_genres.film_id
+        JOIN film_realisateurs ON films.film_id = film_realisateurs.film_id
+        JOIN film_acteurs ON films.film_id = film_acteurs.film_id
+        JOIN acteurs a ON film_acteurs.cast_actor_id = a.cast_actor_id
+        WHERE film_genres.genre_id = (
+            SELECT genre_id
+            FROM (
+                SELECT genre_id, COUNT(*) as frequency
+                FROM genres_fav
+                GROUP BY genre_id
+                ORDER BY frequency DESC
+                LIMIT 1
+            ) AS most_frequent_genre
+        ) OR film_realisateurs.realisateur_id = (
+            SELECT realisateur_id
+            FROM (
+                SELECT realisateur_id, COUNT(*) as frequency
+                FROM reals_fav
+                GROUP BY realisateur_id
+                ORDER BY frequency DESC
+                LIMIT 1
+            ) AS most_frequent_real
+        ) OR a.cast_actor_id = (
+            SELECT cast_actor_id
+            FROM (
+                SELECT cast_actor_id, COUNT(*) as frequency
+                FROM acteurs_fav
+                GROUP BY cast_actor_id
+                ORDER BY frequency DESC
+                LIMIT 1
+            ) AS most_frequent_actor
+        )
+        ORDER BY note DESC
+        LIMIT 10;".to_string(), |(title, note)| {
+            film { title, note }
+        })
+        .unwrap();
+    println!("recommended movies: {:?}", recommended_movies2);
+
+    println!("finished the request");
+
+    //println!("recommended movies: {:#?}", recommended_movies2);
 
     //***************************************************************/
     // conn.exec_batch(
@@ -301,6 +362,148 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
     return json!(recommended_movies2);
 }
 
-fn build_sql_recommendation_query(movies_liked: Vec<String>) -> String {
-    "SELECT name FROM student".to_string() //TODO: change it with manon's SQL query
+fn build_sql_query_views(movies_liked: Vec<String>) -> String {
+    let Query = "/* Création de tables qui contiennent uniquement les films cochés */
+    CREATE OR REPLACE VIEW films_fav AS
+    SELECT film_id,titre,annee,note,duree
+    FROM films
+    WHERE titre='12 Angry Men' OR titre='Vertigo' OR titre='Spartacus' OR titre='West Side Story' OR titre='The Man in Grey' OR titre='Top Hat';
+    
+    /*Compter quels sont les genres favoris*/
+    CREATE OR REPLACE VIEW genres_fav AS
+    SELECT film_genres.film_id, genre_id
+    FROM film_genres,films_fav
+    WHERE film_genres.film_id=films_fav.film_id;
+    
+    /* De même pour les realisateurs */
+    CREATE OR REPLACE VIEW reals_fav AS
+    SELECT film_realisateurs.film_id, realisateur_id
+    FROM film_realisateurs,
+         films_fav
+    WHERE film_realisateurs.film_id = films_fav.film_id;
+    
+    
+    /* Les acteurs */
+    CREATE OR REPLACE VIEW acteurs_fav AS
+    SELECT film_acteurs.film_id,acteurs.cast_actor_id,nom
+    FROM acteurs,films_fav,film_acteurs
+    WHERE film_acteurs.film_id=films_fav.film_id AND acteurs.cast_actor_id=film_acteurs.cast_actor_id;
+    ".to_string();
+    Query
 }
+
+fn build_sql_recommendation_query(movies_liked: Vec<String>) -> String {
+    //"SELECT titre FROM films".to_string()
+
+    //fist make it with films specified below
+    let Query = "
+    SELECT DISTINCT films.titre, films.note/* , films.note, films.annee, films.duree le DISTINCT aussi */
+    FROM films
+    JOIN film_genres ON films.film_id = film_genres.film_id
+    JOIN film_realisateurs ON films.film_id = film_realisateurs.film_id
+    JOIN film_acteurs ON films.film_id = film_acteurs.film_id
+    JOIN acteurs a ON film_acteurs.cast_actor_id = a.cast_actor_id
+    WHERE film_genres.genre_id = (
+        SELECT genre_id
+        FROM (
+            SELECT genre_id, COUNT(*) as frequency
+            FROM genres_fav
+            GROUP BY genre_id
+            ORDER BY frequency DESC
+            LIMIT 1
+        ) AS most_frequent_genre
+    ) OR film_realisateurs.realisateur_id = (
+        SELECT realisateur_id
+        FROM (
+            SELECT realisateur_id, COUNT(*) as frequency
+            FROM reals_fav
+            GROUP BY realisateur_id
+            ORDER BY frequency DESC
+            LIMIT 1
+        ) AS most_frequent_real
+    ) OR a.cast_actor_id = (
+        SELECT cast_actor_id
+        FROM (
+            SELECT cast_actor_id, COUNT(*) as frequency
+            FROM acteurs_fav
+            GROUP BY cast_actor_id
+            ORDER BY frequency DESC
+            LIMIT 1
+        ) AS most_frequent_actor
+    )
+    ORDER BY note DESC
+    LIMIT 4;".to_string();
+    Query
+}
+
+/*
+
+/*
+ Imaginons l'utilisateur a choisi: "12 Angry Men", "Vertigo", "Spartacus", "West Side Story", "The Man in Grey", "Top Hat"
+ */
+
+/* Création de tables qui contiennent uniquement les films cochés */
+CREATE OR REPLACE VIEW films_fav AS
+SELECT film_id,titre,annee,note,duree
+FROM films
+WHERE titre="12 Angry Men" OR titre="Vertigo" OR titre="Spartacus" OR titre="West Side Story" OR titre="The Man in Grey" OR titre="Top Hat";
+
+/*Compter quels sont les genres favoris*/
+CREATE OR REPLACE VIEW genres_fav AS
+SELECT film_genres.film_id, genre_id
+FROM film_genres,films_fav
+WHERE film_genres.film_id=films_fav.film_id;
+
+/* De même pour les realisateurs */
+CREATE OR REPLACE VIEW reals_fav AS
+SELECT film_realisateurs.film_id, realisateur_id
+FROM film_realisateurs,
+     films_fav
+WHERE film_realisateurs.film_id = films_fav.film_id;
+
+
+/* Les acteurs */
+CREATE OR REPLACE VIEW acteurs_fav AS
+SELECT film_acteurs.film_id,acteurs.cast_actor_id,nom
+FROM acteurs,films_fav,film_acteurs
+WHERE film_acteurs.film_id=films_fav.film_id AND acteurs.cast_actor_id=film_acteurs.cast_actor_id;
+
+
+/* Proposer les meilleur film de chaque genre, acteur et réalisateur aimé.  */
+SELECT DISTINCT films.titre, films.note, films.annee, films.duree
+FROM films
+JOIN film_genres ON films.film_id = film_genres.film_id
+JOIN film_realisateurs ON films.film_id = film_realisateurs.film_id
+JOIN film_acteurs ON films.film_id = film_acteurs.film_id
+JOIN acteurs a ON film_acteurs.cast_actor_id = a.cast_actor_id
+WHERE film_genres.genre_id = (
+    SELECT genre_id
+    FROM (
+        SELECT genre_id, COUNT(*) as frequency
+        FROM genres_fav
+        GROUP BY genre_id
+        ORDER BY frequency DESC
+        LIMIT 1
+    ) AS most_frequent_genre
+) OR film_realisateurs.realisateur_id = (
+    SELECT realisateur_id
+    FROM (
+        SELECT realisateur_id, COUNT(*) as frequency
+        FROM reals_fav
+        GROUP BY realisateur_id
+        ORDER BY frequency DESC
+        LIMIT 1
+    ) AS most_frequent_real
+) OR a.cast_actor_id = (
+    SELECT cast_actor_id
+    FROM (
+        SELECT cast_actor_id, COUNT(*) as frequency
+        FROM acteurs_fav
+        GROUP BY cast_actor_id
+                ORDER BY frequency DESC
+        LIMIT 1
+    ) AS most_frequent_actor
+)
+ORDER BY note DESC;
+
+*/
