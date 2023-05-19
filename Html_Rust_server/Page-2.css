@@ -11,7 +11,8 @@
 }
 
 .u-section-1 .u-container-layout-1 {
-  padding: 20px 21px 0;
+  /* changed here */
+  padding: 0px 0px 0;
 }
 
 .u-section-1 .u-text-1 {
@@ -36,7 +37,8 @@
 }
 
 .u-section-1 .u-container-layout-2 {
-  padding: 30px;
+  /* changed here */
+  padding: 0px;
 }
 
 .u-section-1 .u-text-2 {
