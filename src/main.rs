@@ -272,51 +272,17 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
     //just update/create the views, don't care about the result. should probably use exec_drop
 
     let _ = conn
-        .query_map(build_sql_query_views(liked_films), |(title, note)| film {
+        .query_map(build_sql_query_views(&liked_films), |(title, note)| film {
             title,
             note,
         })
         .unwrap();
 
     let recommended_movies2 = conn
-        .query_map("SELECT DISTINCT films.titre, films.note/* , films.note, films.annee, films.duree le DISTINCT aussi */
-        FROM films
-        JOIN film_genres ON films.film_id = film_genres.film_id
-        JOIN film_realisateurs ON films.film_id = film_realisateurs.film_id
-        JOIN film_acteurs ON films.film_id = film_acteurs.film_id
-        JOIN acteurs a ON film_acteurs.cast_actor_id = a.cast_actor_id
-        WHERE film_genres.genre_id = (
-            SELECT genre_id
-            FROM (
-                SELECT genre_id, COUNT(*) as frequency
-                FROM genres_fav
-                GROUP BY genre_id
-                ORDER BY frequency DESC
-                LIMIT 1
-            ) AS most_frequent_genre
-        ) OR film_realisateurs.realisateur_id = (
-            SELECT realisateur_id
-            FROM (
-                SELECT realisateur_id, COUNT(*) as frequency
-                FROM reals_fav
-                GROUP BY realisateur_id
-                ORDER BY frequency DESC
-                LIMIT 1
-            ) AS most_frequent_real
-        ) OR a.cast_actor_id = (
-            SELECT cast_actor_id
-            FROM (
-                SELECT cast_actor_id, COUNT(*) as frequency
-                FROM acteurs_fav
-                GROUP BY cast_actor_id
-                ORDER BY frequency DESC
-                LIMIT 1
-            ) AS most_frequent_actor
+        .query_map(
+            build_sql_recommendation_query(&liked_films),
+            |(title, note)| film { title, note },
         )
-        ORDER BY note DESC
-        LIMIT 10;".to_string(), |(title, note)| {
-            film { title, note }
-        })
         .unwrap();
     println!("recommended movies: {:?}", recommended_movies2);
 
@@ -362,7 +328,7 @@ fn get_recommendations(movies_liked: Movies_liked_or_recommended) -> JsonValue {
     return json!(recommended_movies2);
 }
 
-fn build_sql_query_views(movies_liked: Vec<String>) -> String {
+fn build_sql_query_views(movies_liked: &Vec<String>) -> String {
     let Query = "/* Création de tables qui contiennent uniquement les films cochés */
     CREATE OR REPLACE VIEW films_fav AS
     SELECT film_id,titre,annee,note,duree
@@ -392,7 +358,7 @@ fn build_sql_query_views(movies_liked: Vec<String>) -> String {
     Query
 }
 
-fn build_sql_recommendation_query(movies_liked: Vec<String>) -> String {
+fn build_sql_recommendation_query(movies_liked: &Vec<String>) -> String {
     //"SELECT titre FROM films".to_string()
 
     //fist make it with films specified below
@@ -432,7 +398,7 @@ fn build_sql_recommendation_query(movies_liked: Vec<String>) -> String {
         ) AS most_frequent_actor
     )
     ORDER BY note DESC
-    LIMIT 4;".to_string();
+    LIMIT 10;".to_string();
     Query
 }
 
