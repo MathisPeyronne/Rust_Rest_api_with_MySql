@@ -18,7 +18,7 @@ $(document).ready(function () {
     let data = await response.json();
     return data;
   }
-
+  /*
   getData()
     .then((data) => {
       data.forEach((d) => {
@@ -26,6 +26,7 @@ $(document).ready(function () {
       });
     })
     .catch((e) => alert("Error, Try again."));
+  */
 
   // ----------------------------Add Data Code--------------------------
   $("#submit").click(function (e) {
